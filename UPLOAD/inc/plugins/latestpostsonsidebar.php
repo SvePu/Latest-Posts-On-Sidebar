@@ -171,7 +171,9 @@ function latestpostsonsidebar_find()
 {
 	global $mybb, $db, $templates, $theme, $postslist, $sidebar, $right, $left, $lang;
 	$lang->load("latestpostsonsidebar");
-	$tunviewwhere = $unviewwhere = '';
+	
+	$tunviewwhere = $unviewwhere = $excludeforums = $fidpermissions = '';
+	
 	$unviewable = get_unviewable_forums(true);
 	if($unviewable)
 	{
@@ -185,10 +187,18 @@ function latestpostsonsidebar_find()
 		$tunviewwhere .= " AND t.fid NOT IN ($inactive)";
 	}
 	
-	$excludeforums = '';
 	if(!empty($mybb->settings['latestpostsonsidebar_forumskip']))
 	{
 		$excludeforums = "AND t.fid NOT IN ({$mybb->settings['latestpostsonsidebar_forumskip']})";
+	}	
+
+	$permissions = forum_permissions();
+	for($i = 0; $i <= sizeof($permissions); $i++)
+	{
+		if(isset($permissions[$i]['fid']) && ( $permissions[$i]['canview'] == 0 || $permissions[$i]['canviewthreads'] == 0 ))
+		{
+			$fidpermissions	.= " AND t.fid <> ".$permissions[$i]['fid'];
+		}
 	}
 	
 	if($mybb->settings['latestpostsonsidebar_threadcount'] <= 0)
@@ -200,7 +210,7 @@ function latestpostsonsidebar_find()
 		SELECT t.tid, t.fid, t.lastpost, t.lastposteruid, t.lastposter, t.subject, u.usergroup, u.displaygroup
 		FROM ".TABLE_PREFIX."threads t
 		LEFT JOIN ".TABLE_PREFIX."users u ON (u.uid=t.lastposteruid)
-		WHERE 1=1 {$excludeforums}{$tunviewwhere} AND t.visible='1' AND t.closed NOT LIKE 'moved|%'
+		WHERE 1=1 {$excludeforums}{$tunviewwhere}{$fidpermissions} AND t.visible='1' AND t.closed NOT LIKE 'moved|%'
 		ORDER BY t.lastpost DESC
 		LIMIT 0, ".$mybb->settings['latestpostsonsidebar_threadcount']
 	);
