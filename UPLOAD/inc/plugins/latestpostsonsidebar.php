@@ -13,7 +13,7 @@ if(my_strpos($_SERVER['PHP_SELF'], 'index.php'))
 {
 	global $templatelist;
 	if(isset($templatelist)){$templatelist .= ',';}
-	$templatelist .= 'index_sidebar';
+	$templatelist .= 'index_sidebar_main, index_sidebar_postlist, index_sidebar_postlist_no_post';
 }
 
 /* Hooks */
@@ -30,7 +30,7 @@ function latestpostsonsidebar_info()
         "website"       => "https://github.com/SvePu/Latest-Posts-On-Sidebar",
         "author"        => "SvePu",
         "authorsite"    => "https://github.com/SvePu",
-        "version"       => "1.1",
+        "version"       => "1.2",
         "codename"      => "latestpostsonsidebar",
         "compatibility" => "18*"
     );
@@ -105,7 +105,7 @@ function latestpostsonsidebar_install()
     }
     rebuild_settings();
 	
-	$templates['index_sidebar'] = '<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
+	$templates['index_sidebar_main'] = '<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
 <thead>
 <tr>
 <td class="thead">
@@ -118,6 +118,17 @@ function latestpostsonsidebar_install()
 </tbody>
 </table>
 <br />';
+
+$templates['index_sidebar_postlist'] = '<tr>
+<td class="{$altbg}">
+<strong><a href="{$mybb->settings[\'bburl\']}/{$lastpostlink}" title="{$lastpostlink_title}">{$lastpost_subject}</a></strong>
+<br /><span class="smalltext">{$lang->latest_post_by}{$lastposterlink}{$latestposttime}</span>
+</td>
+</tr>';
+
+$templates['index_sidebar_postlist_no_post'] = '<tr>
+<td class="{$altbg}">{$lang->no_posts}</td>
+</tr>';
 
     foreach($templates as $title => $template)
 	{
@@ -154,7 +165,7 @@ function latestpostsonsidebar_deactivate()
 function latestpostsonsidebar_uninstall()
 {
     global $db;
-	$db->delete_query("templates", "title='index_sidebar'");
+	$db->delete_query("templates", "title LIKE 'index_sidebar_%'");
 	
     $query = $db->simple_select("settinggroups", "gid", "name='latestpostsonsidebar'");
     $gid = $db->fetch_field($query, "gid");
@@ -172,6 +183,8 @@ function latestpostsonsidebar_find()
 	global $mybb, $db, $templates, $theme, $postslist, $sidebar, $right, $left, $lang;
 	$lang->load("latestpostsonsidebar");
 	
+	$altbg = alt_trow();
+	$postslist = '';
 	$tunviewwhere = $unviewwhere = $excludeforums = $fidpermissions = '';
 	
 	$unviewable = get_unviewable_forums(true);
@@ -207,50 +220,53 @@ function latestpostsonsidebar_find()
 	}
 
 	$query = $db->query("
-		SELECT t.tid, t.fid, t.lastpost, t.lastposteruid, t.lastposter, t.subject, u.usergroup, u.displaygroup
-		FROM ".TABLE_PREFIX."threads t
-		LEFT JOIN ".TABLE_PREFIX."users u ON (u.uid=t.lastposteruid)
+		SELECT p.pid, p.tid, p.uid, p.username, p.subject, p.dateline, u.usergroup, u.displaygroup
+		FROM ".TABLE_PREFIX."posts p
+		LEFT JOIN ".TABLE_PREFIX."users u ON (u.uid=p.uid)
+		LEFT JOIN ".TABLE_PREFIX."threads t ON (t.tid=p.tid)
 		WHERE 1=1 {$excludeforums}{$tunviewwhere}{$fidpermissions} AND t.visible='1' AND t.closed NOT LIKE 'moved|%'
-		ORDER BY t.lastpost DESC
+		ORDER BY p.dateline DESC
 		LIMIT 0, ".$mybb->settings['latestpostsonsidebar_threadcount']
 	);
 	
 	if($db->num_rows($query) > 0 && $mybb->settings['latestpostsonsidebar_forumskip'] != '-1')
 	{
-		while($thread = $db->fetch_array($query))
+		while($post = $db->fetch_array($query))
 		{
 			require_once MYBB_ROOT."inc/class_parser.php";
 			$parser = new postParser;
-				
-			$lastpostlink = get_thread_link($thread['tid'], 0, "lastpost");
-			$lastpostlink_title = $lastpost_name = htmlspecialchars_uni($parser->parse_badwords($thread['subject']));
-			if($mybb->settings['latestpostsonsidebar_titlelenght'] > 0 && my_strlen($thread['subject']) > $mybb->settings['latestpostsonsidebar_titlelenght'])
-			{
-				$lastpost_name = htmlspecialchars_uni(my_substr($thread['subject'], 0, $mybb->settings['latestpostsonsidebar_titlelenght']-3, 0)."...");
-			}
 			
-			if($thread['lastposteruid'] != 0)
+			$lastpostlink = "showthread.php?tid=".$post['tid']."&pid=".$post['pid']."#pid".$post['pid'];
+			$lastpostlink_title = $lastpost_subject = htmlspecialchars_uni($parser->parse_badwords($post['subject']));
+			if($mybb->settings['latestpostsonsidebar_titlelenght'] > 0 && my_strlen($post['subject']) > $mybb->settings['latestpostsonsidebar_titlelenght'])
 			{
-				$lastposterlink = build_profile_link(format_name(htmlspecialchars_uni($thread['lastposter']), $thread['usergroup'], $thread['displaygroup']), $thread['lastposteruid']);
+				$lastpost_subject = htmlspecialchars_uni(my_substr($post['subject'], 0, $mybb->settings['latestpostsonsidebar_titlelenght']-3, 0)."...");
+			}
+			$lang->latest_post_by = $db->escape_string($lang->latest_post_by);
+			if($post['uid'] != 0)
+			{
+				$lastposterlink = build_profile_link(format_name(htmlspecialchars_uni($post['username']), $post['usergroup'], $post['displaygroup']), $post['uid']);
 			}
 			else
 			{
-				$lastposterlink = htmlspecialchars_uni($thread['lastposter']);
+				$lastposterlink = htmlspecialchars_uni($post['uid']);
 			}
 			
-			$lastposttimeago = my_date('relative', $thread['lastpost']);
+			$lastposttimeago = my_date('relative', $post['dateline']);
 			$latestposttime =  '';
 			if($mybb->settings['latestpostsonsidebar_showtime'] == 1)
 			{
 				$latestposttime = '<br />'.$lang->sprintf($db->escape_string($lang->latestposttime), $lastposttimeago);
 			}
 			
-			$postslist = $postslist . '<tr><td class="trow1" valign="top"><strong><a href="'.$mybb->settings['bburl'].'/'.$lastpostlink.'" title="'.$lastpostlink_title.'">'.$lastpost_name.'</a></strong><br /><span class="smalltext">'.$db->escape_string($lang->latest_post_by).' '.$lastposterlink.$latestposttime.'</span></td></tr>';			
+			eval("\$postslist .= \"".$templates->get("index_sidebar_postlist")."\";");
+			$altbg = alt_trow();	
 		}
 	}
 	else
 	{
-		$postslist = '<tr><td class="trow1" valign="top">'.$db->escape_string($lang->no_posts).'</td></tr>'; 
+		$lang->no_posts = $db->escape_string($lang->no_posts);
+		eval("\$postslist = \"".$templates->get("index_sidebar_postlist_no_post")."\";");
 	}
 	
 	if($mybb->settings['latestpostsonsidebar_rightorleft'] == 1)
@@ -263,5 +279,5 @@ function latestpostsonsidebar_find()
 		$right = "left";
 		$left = "right";
 	}
-	eval("\$sidebar = \"".$templates->get("index_sidebar")."\";");
+	eval("\$sidebar = \"".$templates->get("index_sidebar_main")."\";");
 }
