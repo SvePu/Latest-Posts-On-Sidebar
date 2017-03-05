@@ -44,59 +44,59 @@ function latestpostsonsidebar_install()
 	$rows = $db->fetch_field($query_add, "rows");
 
 	$new_setting_group = array(
-		"name" => "latestpostsonsidebar",
-		"title" => $db->escape_string($lang->settings_name),
-		"disporder" => $rows+1,
-		"isdefault" => 0
+		"name"		=>	"latestpostsonsidebar",
+		"title"		=>	$db->escape_string($lang->settings_name),
+		"disporder"	=>	$rows+1,
+		"isdefault"	=>	0
 		);
 
 	$gid = $db->insert_query("settinggroups", $new_setting_group);
 
 	$settings[] = array(
-		"name" => "latestpostsonsidebar_threadcount",
-		"title" => $db->escape_string($lang->num_posts_to_show),
-		"optionscode" => "numeric",
-		"disporder" => 1,
-		"value" => 10,
-		"gid" => $gid
+		"name"		=>	"latestpostsonsidebar_threadcount",
+		"title"		=>	$db->escape_string($lang->num_posts_to_show),
+		"optionscode"	=>	"numeric",
+		"disporder"	=>	1,
+		"value"		=>	10,
+		"gid"		=>	$gid
 		);
 
 	$settings[] = array(
-		"name" => "latestpostsonsidebar_titlelenght",
-		"title" => $db->escape_string($lang->max_titlelenght),
-		"description" => $db->escape_string($lang->max_titlelenght_desc),
-		"optionscode" => "numeric",
-		"disporder" => 2,
-		"value" => 35,
-		"gid" => $gid
+		"name"		=>	"latestpostsonsidebar_titlelenght",
+		"title"		=>	$db->escape_string($lang->max_titlelenght),
+		"description"	=>	$db->escape_string($lang->max_titlelenght_desc),
+		"optionscode"	=>	"numeric",
+		"disporder"	=>	2,
+		"value"		=>	35,
+		"gid"		=>	$gid
 		);
 
 	$settings[] = array(
-		"name" => "latestpostsonsidebar_forumskip",
-		"title" => $db->escape_string($lang->forums_to_skip),
-		"description" => $db->escape_string($lang->forums_to_skip_desc),
-		"optionscode" => "forumselect",
-		"disporder" => 3,
-		"gid" => $gid
+		"name"		=>	"latestpostsonsidebar_forumskip",
+		"title"		=>	$db->escape_string($lang->forums_to_skip),
+		"description"	=>	$db->escape_string($lang->forums_to_skip_desc),
+		"optionscode"	=>	"forumselect",
+		"disporder"	=>	3,
+		"gid"		=>	$gid
 		);
 
 	$settings[] = array(
-		"name" => "latestpostsonsidebar_showtime",
-		"title" => $db->escape_string($lang->latestposts_showtime),
-		"description" => $db->escape_string($lang->latestposts_showtime_desc),
-		"optionscode" => "yesno",
-		"disporder" => 4,
-		"value" => 1,
-		"gid" => $gid
+		"name"		=>	"latestpostsonsidebar_showtime",
+		"title"		=>	$db->escape_string($lang->latestposts_showtime),
+		"description"	=>	$db->escape_string($lang->latestposts_showtime_desc),
+		"optionscode"	=>	"yesno",
+		"disporder"	=>	4,
+		"value"		=>	1,
+		"gid"		=>	$gid
 		);
 
 	$settings[] = array(
-		"name" => "latestpostsonsidebar_rightorleft",
-		"title" => $db->escape_string($lang->rightorleft),
-		"optionscode" => 'radio \n 1='.$db->escape_string($lang->latestposts_right).' \n 2='.$db->escape_string($lang->latestposts_left).'',
-		"disporder" => 5,
-		"value" => 1,
-		"gid" => $gid
+		"name"		=>	"latestpostsonsidebar_rightorleft",
+		"title"		=>	$db->escape_string($lang->rightorleft),
+		"optionscode"	=>	'radio \n 1='.$db->escape_string($lang->latestposts_right).' \n 2='.$db->escape_string($lang->latestposts_left).'',
+		"disporder"	=>	5,
+		"value"		=>	1,
+		"gid"		=>	$gid
 		);
 
 	foreach($settings as $array => $content)
