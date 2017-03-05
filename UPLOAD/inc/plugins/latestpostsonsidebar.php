@@ -25,13 +25,13 @@ function latestpostsonsidebar_info()
 	$lang->load("config_latestpostsonsidebar");
 
 	return array(
-		"name"			=>	$db->escape_string($lang->plugname),
-		"description"		=>	$db->escape_string($lang->plugdesc),
-		"website"		=>	"https://github.com/SvePu/Latest-Posts-On-Sidebar",
-		"author"			=>	"SvePu",
-		"authorsite"		=>	"https://github.com/SvePu",
-		"version"		=>	"1.2",
-		"codename"		=>	"latestpostsonsidebar",
+		"name"		=>	$db->escape_string($lang->plugname),
+		"description"	=>	$db->escape_string($lang->plugdesc),
+		"website"	=>	"https://github.com/SvePu/Latest-Posts-On-Sidebar",
+		"author"	=>	"SvePu",
+		"authorsite"	=>	"https://github.com/SvePu",
+		"version"	=>	"1.2",
+		"codename"	=>	"latestpostsonsidebar",
 		"compatibility"	=>	"18*"
 		);
 }
